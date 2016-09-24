@@ -6,7 +6,7 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                 [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
                 [[1, 5, 9], [3, 5, 7]] # diagonals
 
-SETTING = 'computer'.freeze # use 'pick', 'computer', or 'player'
+SETTING = 'pick'.freeze # use 'pick', 'computer', or 'player'
 PLAYER = 'player'.freeze
 COMPUTER = 'computer'.freeze
 
@@ -16,7 +16,6 @@ end
 
 # rubocop:disable Metrics/AbcSize
 def display_board(brd)
-  system 'clear'
   puts "You're a #{PLAYER_MARKER}. Computer is a #{COMPUTER_MARKER}"
   puts ""
   puts "     |     |"
@@ -122,24 +121,20 @@ def detect_winner(brd)
   nil
 end
 
-def turn_order(player)
-  loop do
-    prompt "Do you want to go first (y or n)"
-    choice = gets.chomp
-    if choice.downcase.start_with?('y')
-      return PLAYER
-    else
-      return COMPUTER
-    end
-    prompt "Thats not a valid input."
+def turn_order
+  prompt "Type y to play first or any other key to play second"
+  choice = gets.chomp
+  if choice.casecmp('y').zero?
+    return PLAYER
+  else
+    return COMPUTER
   end
-  player
 end
 
 current_player = nil
 case SETTING
 when 'pick'
-  current_player = turn_order(current_player)
+  current_player = turn_order
 when PLAYER
   current_player = PLAYER
 when COMPUTER
@@ -162,35 +157,51 @@ def alternate_player(player)
   end
 end
 
+def continue_game?
+  loop do
+    prompt "Press Enter to start next round"
+    input = gets
+    if input == "\n"
+      return
+    else
+      prompt "Thats not a valid input"
+    end
+  end
+end
+
 loop do
-  cpu = 0
-  player = 0
-  until (cpu == 5) || (player == 5)
+  computer_score = 0
+  player_score = 0
+  until (computer_score == 5) || (player_score == 5)
 
     board = initialize_board
     loop do
+      system 'clear'
       display_board(board)
-      prompt "Score: \n Computer: #{cpu} \n Player: #{player}"
+      prompt "Score: \n Computer: #{computer_score} \n Player: #{player_score}"
       place_piece!(board, current_player)
       current_player = alternate_player(current_player)
-      break if someone_won?(board) || board_full?(board)
+      if someone_won?(board) || board_full?(board)
+        display_board(board)
+        continue_game?
+        break
+      end
     end
 
     if detect_winner(board) == 'Player'
-      player += 1
+      player_score += 1
     elsif detect_winner(board) == 'Computer'
-      cpu += 1
+      computer_score += 1
     else
       prompt "It's a tie!"
     end
-
   end
 
   display_board(board)
-  puts player == 5 ? "Congratulations, the Player won!!!" : "Computer won"
-  prompt "Play again? (y or n)"
+  puts player_score == 5 ? "Congratulations, the Player won!!!" : "Computer won"
+  prompt "Type y to play again or any other key to exit"
   answer = gets.chomp
-  break unless answer.downcase.start_with?('y')
+  break unless answer.casecmp('y').zero?
 end
 
 prompt "Thanks for playing Tic Tac Toe! Good Bye!"
