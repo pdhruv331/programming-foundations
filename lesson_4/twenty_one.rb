@@ -23,8 +23,8 @@ def prompt(msg)
   puts "=> #{msg}"
 end
 
-def deal(hand1 = [], hand2 = [], quantity = 1)
-  quantity.times do |card|
+def deal(hand1 = [], hand2 = [])
+  2.times do |card|
     until hand1[card] != hand2[card]
       hand1[card] = [RANK.sample, SUITS.sample]
       hand2[card] = [RANK.sample, SUITS.sample]
@@ -32,18 +32,18 @@ def deal(hand1 = [], hand2 = [], quantity = 1)
   end
 end
 
-def display_cards(player, dealer)
+def display_initial_cards(player_cards, dealer_cards)
   system 'clear'
   string = ""
-  player.each do |cards|
-    string += cards[0] + " "
+  player_cards.each do |card|
+    string += card[0] + " "
   end
   prompt "Player has #{string.split.join(' and ')}"
-  prompt "Your total is #{total(player)}"
+  prompt "Your total is #{total(player_cards)}"
 
   str = ""
-  dealer.each do |cards|
-    str += cards[0] + " "
+  dealer_cards.each do |card|
+    str += card[0] + " "
   end
 
   arr = str.split
@@ -51,10 +51,10 @@ def display_cards(player, dealer)
   prompt "Dealer has #{arr.join(' and ')} and unknown"
 end
 
-def display_cards_all(dealer)
+def display_dealer_cards(cards)
   str = ""
-  dealer.each do |cards|
-    str += cards[0] + " "
+  cards.each do |card|
+    str += card[0] + " "
   end
   prompt "Dealer has #{str.split.join(' and ')}"
 end
@@ -71,17 +71,15 @@ def hit(hand, player_hand, dealer_hand)
   end
 end
 
-def value_of_ace?(current_total)
+def value_of_ace(current_total)
   current_total > 10 ? 1 : 11
 end
 
 def total(hand)
   total = 0
   hand.each do |cards|
-    total += if ['Jack', 'Queen', 'King'].include?(cards[0])
-               VALUES[cards[0]]
-             elsif cards[0] == 'Ace'
-               value_of_ace?(total)
+    total += if cards[0] == 'Ace'
+               value_of_ace(total)
              else
                VALUES[cards[0]]
              end
@@ -90,11 +88,7 @@ def total(hand)
 end
 
 def bust?(hand)
-  if total(hand) > 21
-    true
-  else
-    false
-  end
+  total(hand) > 21
 end
 
 def not_hit(hand)
@@ -116,7 +110,7 @@ def player_turn(hand, player_hand, dealer_hand)
       next
     end
     hit(hand, player_hand, dealer_hand) if answer == 'hit'
-    display_cards(player_hand, dealer_hand)
+    display_initial_cards(player_hand, dealer_hand)
   end
   not_hit(hand)
 end
@@ -125,7 +119,7 @@ def dealer_turn(hand, player_hand, dealer_hand)
   until total(hand) >= 17
     prompt "Dealer hits"
     hit(hand, player_hand, dealer_hand)
-    display_cards_all(hand)
+    display_dealer_cards(hand)
   end
   if bust?(hand)
     prompt "Dealer busted. You Win!!!!!"
@@ -141,14 +135,12 @@ end
 
 def compare_total(player_hand, dealer_hand)
   prompt "Comparing Totals ............."
+  display_total(player_hand, dealer_hand)
   if total(player_hand) > total(dealer_hand)
-    display_total(player_hand, dealer_hand)
     prompt "Player Wins !!!"
   elsif total(dealer_hand) > total(player_hand)
-    display_total(player_hand, dealer_hand)
     prompt "Dealer Wins !!!"
   else
-    display_total(player_hand, dealer_hand)
     prompt "Its a tie"
   end
 end
@@ -161,8 +153,8 @@ loop do
     prompt "---------------------------"
     prompt "Now dealing cards ........."
 
-    deal(player_hand, dealer_hand, 2)
-    display_cards(player_hand, dealer_hand)
+    deal(player_hand, dealer_hand)
+    display_initial_cards(player_hand, dealer_hand)
     player_turn(player_hand, player_hand, dealer_hand)
     break if bust?(player_hand)
 
